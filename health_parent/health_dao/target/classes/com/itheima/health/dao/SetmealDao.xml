@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--namespace属性：名称空间， 写接口的全限定名-->
+<mapper namespace="com.itheima.health.dao.SetmealDao">
+
+    <insert id="add">
+<selectKey keyProperty="id" resultType="int" order="AFTER">
+    select last_insert_id()
+</selectKey>
+        insert into t_setmeal (name,code,helpCode,sex,age,price,remark,attention,img)
+        values(#{name},#{code},#{helpCode},#{sex},#{age},#{price},#{remark},#{attention},#{img})
+    </insert>
+    <insert id="addSetmealCheckGroup">
+        insert into t_setmeal_checkgroup (setmeal_id, checkgroup_id)
+        values (#{setmealId},#{checkgroupId})
+    </insert>
+    <update id="update">
+        update t_setmeal
+        set
+         name=#{name},
+        code=#{code},
+        helpCode=#{helpCode},
+        sex=#{sex},
+        age=#{age},
+        price=#{price},
+        remark=#{remark},
+        attention=#{attention},
+        img=#{img}
+    where id=#{id}
+    </update>
+    <delete id="deleteSetmealCheckGroup">
+        delete from t_setmeal_checkgroup where setmeal_id = #{id}
+    </delete>
+    <delete id="deleteById">
+        delete from t_setmeal where id = #{id}
+    </delete>
+    <select id="findByCondition" resultType="com.itheima.health.pojo.Setmeal">
+        select * from t_setmeal
+        <if test="queryString != null and queryString.length>0">
+            where code like #{queryString} or name like #{queryString} or helpCode like #{queryString}
+        </if>
+    </select>
+    <select id="findById" resultType="com.itheima.health.pojo.Setmeal">
+        select * from t_setmeal where id = #{id}
+    </select>
+    <select id="findCheckgroupIdsBySetmealId" resultType="java.lang.Integer">
+        select checkgroup_id from t_setmeal_checkgroup where setmeal_id = #{id}
+    </select>
+    <select id="findImgs" resultType="java.lang.String">
+        select img from t_setmeal
+    </select>
+    <select id="findDetailById" resultMap="setmealDetailMap">
+        select s.*,
+         sc.checkgroup_id,c.name checkgroup_name, c.remark checkgroup_remark,
+         cc.checkitem_id,ci.name checkitem_name
+         from
+        t_setmeal s
+        left join t_setmeal_checkgroup sc on s.id=sc.setmeal_id
+        left join t_checkgroup c on sc.checkgroup_id=c.id
+        left join t_checkgroup_checkitem cc on c.id=cc.checkgroup_id
+        left join t_checkitem ci on cc.checkitem_id=ci.id
+        where s.id=#{id}
+    </select>
+    <resultMap id="setmealDetailMap" type="Setmeal">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="helpCode" column="helpCode"/>
+        <result property="sex" column="sex"/>
+        <result property="age" column="age"/>
+        <result property="price" column="price"/>
+        <result property="remark" column="remark"/>
+        <result property="attention" column="attention"/>
+        <result property="img" column="img"/>
+        <collection property="checkGroups" ofType="CheckGroup">
+            <id property="id" column="checkgroup_id"/>
+            <result property="name" column="checkgroup_name"/>
+            <result property="remark" column="checkgroup_remark"/>
+            <collection property="checkItems" ofType="CheckItem">
+                <id property="id" column="checkitem_id"/>
+                <result property="name" column="checkitem_name"/>
+            </collection>
+        </collection>
+    </resultMap>
+
+
+
+    <select id="findAll" resultType="com.itheima.health.pojo.Setmeal">
+        select * from t_setmeal
+    </select>
+    <select id="findOrdercountBySetmealId" resultType="java.lang.Integer">
+        select count(1) from t_order where setmeal_id = #{id}
+    </select>
+    <select id="findSetmealCount" resultType="java.util.Map">
+select s.name,count(1) value from t_order o,t_setmeal s where s.id = o.setmeal_id group by s.name
+    </select>
+
+</mapper>
